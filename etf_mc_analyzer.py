@@ -276,8 +276,8 @@ st.title("📊 ETF Portfolio Analyzer")
 st.sidebar.header("Global Settings")
 
 # ETF Selection (using text_area for flexibility)
-default_tickers_en = "VOO\nAGG\nGLD" # Example US Tickers
-ticker_input = st.sidebar.text_area("Enter ETF Tickers (one per line, yfinance format e.g., 'VOO')", value=default_tickers_en, height=100)
+default_tickers_en = "SWDA.MI\nXEON.MI\nSGLD.MI" # Example tickers
+ticker_input = st.sidebar.text_area("Enter ETF Tickers (one per line, yfinance format e.g., 'SWDA.MI')", value=default_tickers_en, height=100)
 tickers = [ticker.strip().upper() for ticker in ticker_input.split('\n') if ticker.strip()]
 
 # Date Selection
