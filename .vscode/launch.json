@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Streamlit App", // You can rename this label if you like
+            "type": "debugpy",
+            "request": "launch",
+            "module": "streamlit", // Execute streamlit as a module
+            "args": [
+                "run",
+                "${workspaceFolder}/etf_analyzer.py", // <-- MAKE SURE this filename matches your script!
+                // You can add Streamlit CLI arguments here if needed
+                // e.g., "--server.port", "8502"
+            ],
+            "console": "integratedTerminal", // Show output in VS Code's terminal
+            "justMyCode": true // Set to false if you need to step into library code (like pandas or streamlit itself)
+        }
+    ]
+}
