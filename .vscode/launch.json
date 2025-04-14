@@ -11,7 +11,7 @@
             "module": "streamlit", // Execute streamlit as a module
             "args": [
                 "run",
-                "${workspaceFolder}/etf_analyzer.py", // <-- MAKE SURE this filename matches your script!
+                "${workspaceFolder}/etf_mc_analyzer.py", // <-- MAKE SURE this filename matches your script!
                 // You can add Streamlit CLI arguments here if needed
                 // e.g., "--server.port", "8502"
             ],
