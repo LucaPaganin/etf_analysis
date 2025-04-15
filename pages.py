@@ -4,10 +4,12 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy.stats import norm
-from portfolio_analysis_utils import (monte_carlo_simulation, calculate_cagr, calculate_sortino_ratio, 
-                                       calculate_max_drawdown, plot_cumulative_returns, plot_drawdown, 
-                                       plot_returns_histogram, plot_rolling_std_dev, calculate_rolling_cagr, 
-                                       plot_rolling_returns)
+from portfolio_analysis_utils import (
+    monte_carlo_simulation, calculate_cagr, calculate_sortino_ratio, 
+    calculate_max_drawdown, plot_cumulative_returns, plot_drawdown, 
+    plot_returns_histogram, plot_rolling_std_dev, calculate_rolling_cagr, 
+    plot_rolling_returns
+)
 
 def monte_carlo_simulation_page(returns, risk_free_rate, tickers):
     st.header("🌍 Monte Carlo Simulation of Random Portfolios")
@@ -84,6 +86,52 @@ def monte_carlo_simulation_page(returns, risk_free_rate, tickers):
                 legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
             )
             st.plotly_chart(fig_mc, use_container_width=True)
+            
+            # --- Display Optimal Weights and Other Charts ---
+            st.subheader("Identified Optimal Portfolios")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**Max Sharpe Ratio Portfolio**")
+                st.metric("Sharpe Ratio", f"{max_sharpe_port['Sharpe Ratio']:.3f}")
+                st.metric("Sortino Ratio", f"{max_sharpe_port['Sortino Ratio']:.3f}")
+                st.metric("Annual Return", f"{max_sharpe_port['Return']:.2%}")
+                st.metric("Annual Volatility", f"{max_sharpe_port['Volatility']:.2%}")
+                st.write("Weights:")
+                st.dataframe(pd.DataFrame({'ETF': tickers, 'Weight': [f"{w:.2%}" for w in max_sharpe_port['Weights']]}).set_index('ETF'))
+
+            with col2:
+                st.markdown("**Min Volatility Portfolio**")
+                st.metric("Sharpe Ratio", f"{min_vol_port['Sharpe Ratio']:.3f}")
+                st.metric("Sortino Ratio", f"{min_vol_port['Sortino Ratio']:.3f}")
+                st.metric("Annual Return", f"{min_vol_port['Return']:.2%}")
+                st.metric("Annual Volatility", f"{min_vol_port['Volatility']:.2%}")
+                st.write("Weights:")
+                st.dataframe(pd.DataFrame({'ETF': tickers, 'Weight': [f"{w:.2%}" for w in min_vol_port['Weights']]}).set_index('ETF'))
+
+            with col3:
+                 st.markdown("**Max Sortino Ratio Portfolio**")
+                 st.metric("Sharpe Ratio", f"{max_sortino_port['Sharpe Ratio']:.3f}")
+                 st.metric("Sortino Ratio", f"{max_sortino_port['Sortino Ratio']:.3f}")
+                 st.metric("Annual Return", f"{max_sortino_port['Return']:.2%}")
+                 st.metric("Annual Volatility", f"{max_sortino_port['Volatility']:.2%}")
+                 st.write("Weights:")
+                 st.dataframe(pd.DataFrame({'ETF': tickers, 'Weight': [f"{w:.2%}" for w in max_sortino_port['Weights']]}).set_index('ETF'))
+
+
+            # Histograms of simulated metrics
+            st.subheader("Distribution of Simulated Metrics")
+            col_hist1, col_hist2, col_hist3 = st.columns(3)
+            with col_hist1:
+                 fig_hist_ret = px.histogram(mc_results, x='Return', title='Distribution of Simulated Returns', nbins=50)
+                 fig_hist_ret.update_layout(xaxis_tickformat=".1%")
+                 st.plotly_chart(fig_hist_ret, use_container_width=True)
+            with col_hist2:
+                 fig_hist_vol = px.histogram(mc_results, x='Volatility', title='Distribution of Simulated Volatilities', nbins=50)
+                 fig_hist_vol.update_layout(xaxis_tickformat=".1%")
+                 st.plotly_chart(fig_hist_vol, use_container_width=True)
+            with col_hist3:
+                 fig_hist_sharpe = px.histogram(mc_results, x='Sharpe Ratio', title='Distribution of Simulated Sharpe Ratios', nbins=50)
+                 st.plotly_chart(fig_hist_sharpe, use_container_width=True)
 
 
 def single_portfolio_analysis_page(returns_arithmetic, risk_free_rate, tickers):
