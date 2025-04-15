@@ -51,9 +51,10 @@ def monte_carlo_simulation_page(returns, risk_free_rate, tickers):
                 ),
                 text=[f"Sharpe: {sr:.2f}<br>Sortino: {sor:.2f}<br>Return: {r:.2%}<br>Vol: {v:.2%}"
                       for sr, sor, r, v in zip(mc_results['Sharpe Ratio'], mc_results['Sortino Ratio'], mc_results['Return'], mc_results['Volatility'])],
-                 hoverinfo='text'
+                hoverinfo='text'
             ))
 
+            # Highlight optimal portfolios
             fig_mc.add_trace(go.Scatter(
                 x=[max_sharpe_port['Volatility']],
                 y=[max_sharpe_port['Return']],

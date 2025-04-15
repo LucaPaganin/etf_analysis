@@ -8,7 +8,17 @@ import yfinance as yf
 import streamlit as st
 
 def download_data(tickers, start_date, end_date):
-    """Downloads historical Adjusted Close data for the given tickers (robust version)."""
+    """
+    Downloads historical Adjusted Close data for the given tickers.
+
+    Args:
+        tickers (list): List of ticker symbols to download data for.
+        start_date (str): Start date for the data in 'YYYY-MM-DD' format.
+        end_date (str): End date for the data in 'YYYY-MM-DD' format.
+
+    Returns:
+        pd.DataFrame: Cleaned DataFrame containing Adjusted Close prices for the tickers.
+    """
     try:
         raw_data = yf.download(tickers, start=start_date, end=end_date, progress=False)
 
@@ -56,7 +66,16 @@ def download_data(tickers, start_date, end_date):
         return pd.DataFrame()
 
 def calculate_returns(data, method='log'):
-    """Calculates daily or logarithmic returns."""
+    """
+    Calculates daily or logarithmic returns for the given data.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing price data.
+        method (str): Method to calculate returns ('log' for logarithmic, otherwise percentage).
+
+    Returns:
+        pd.DataFrame: DataFrame containing calculated returns.
+    """
     if method == 'log':
         returns = np.log(data / data.shift(1))
     else:
@@ -64,14 +83,36 @@ def calculate_returns(data, method='log'):
     return returns.dropna()
 
 def calculate_portfolio_performance(weights, mean_returns, cov_matrix, risk_free_rate, trading_days=252):
-    """Calculates annualized portfolio return, volatility, and Sharpe Ratio."""
+    """
+    Calculates annualized portfolio return, volatility, and Sharpe Ratio.
+
+    Args:
+        weights (np.array): Array of portfolio weights.
+        mean_returns (pd.Series): Mean returns of the assets.
+        cov_matrix (pd.DataFrame): Covariance matrix of the assets.
+        risk_free_rate (float): Risk-free rate for Sharpe Ratio calculation.
+        trading_days (int): Number of trading days in a year (default is 252).
+
+    Returns:
+        tuple: Annualized return, volatility, and Sharpe Ratio of the portfolio.
+    """
     portfolio_return = np.sum(mean_returns * weights) * trading_days
     portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * np.sqrt(trading_days)
     sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_stddev if portfolio_stddev != 0 else 0
     return portfolio_return, portfolio_stddev, sharpe_ratio
 
 def calculate_sortino_ratio(portfolio_daily_returns, risk_free_rate, trading_days=252):
-    """Calculates the annualized Sortino Ratio."""
+    """
+    Calculates the annualized Sortino Ratio for a portfolio.
+
+    Args:
+        portfolio_daily_returns (pd.Series): Daily returns of the portfolio.
+        risk_free_rate (float): Risk-free rate for Sortino Ratio calculation.
+        trading_days (int): Number of trading days in a year (default is 252).
+
+    Returns:
+        float: Annualized Sortino Ratio.
+    """
     target_return = (1 + risk_free_rate)**(1/trading_days) - 1
     downside_returns = portfolio_daily_returns[portfolio_daily_returns < target_return]
 
@@ -89,7 +130,15 @@ def calculate_sortino_ratio(portfolio_daily_returns, risk_free_rate, trading_day
     return sortino_ratio
 
 def calculate_max_drawdown(cumulative_returns):
-    """Calculates the Maximum Drawdown."""
+    """
+    Calculates the Maximum Drawdown of a portfolio.
+
+    Args:
+        cumulative_returns (pd.Series): Cumulative returns of the portfolio.
+
+    Returns:
+        tuple: Maximum drawdown, start date, and end date of the drawdown period.
+    """
     running_max = cumulative_returns.cummax()
     drawdown = (cumulative_returns - running_max) / running_max
     max_drawdown = drawdown.min()
@@ -98,20 +147,46 @@ def calculate_max_drawdown(cumulative_returns):
     return max_drawdown, start_date, end_date
 
 def calculate_cagr(cumulative_returns):
-    """Calculates the Compound Annual Growth Rate (CAGR)."""
+    """
+    Calculates the Compound Annual Growth Rate (CAGR) of a portfolio.
+
+    Args:
+        cumulative_returns (pd.Series): Cumulative returns of the portfolio.
+
+    Returns:
+        float: CAGR of the portfolio.
+    """
     total_return = cumulative_returns.iloc[-1] / cumulative_returns.iloc[0] - 1
     years = (cumulative_returns.index[-1] - cumulative_returns.index[0]).days / 365.25
     cagr = (1 + total_return) ** (1 / years) - 1 if years > 0 else 0
     return cagr
 
 def plot_cumulative_returns(cumulative_returns, title="Portfolio Growth"):
-    """Plotly chart of cumulative growth."""
+    """
+    Creates a Plotly chart of cumulative portfolio growth.
+
+    Args:
+        cumulative_returns (pd.Series): Cumulative returns of the portfolio.
+        title (str): Title of the chart.
+
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object.
+    """
     fig = px.line(cumulative_returns, title=title, labels={'value': 'Cumulative Value', 'index': 'Date'})
     fig.update_layout(hovermode="x unified")
     return fig
 
 def plot_drawdown(cumulative_returns, title="Historical Drawdown"):
-    """Plotly chart of drawdown."""
+    """
+    Creates a Plotly chart of historical drawdown.
+
+    Args:
+        cumulative_returns (pd.Series): Cumulative returns of the portfolio.
+        title (str): Title of the chart.
+
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object.
+    """
     running_max = cumulative_returns.cummax()
     drawdown = (cumulative_returns - running_max) / running_max * 100
     fig = go.Figure()
@@ -120,7 +195,17 @@ def plot_drawdown(cumulative_returns, title="Historical Drawdown"):
     return fig
 
 def plot_returns_histogram(returns, period='Monthly', title="Returns Histogram"):
-    """Plotly histogram of periodic returns."""
+    """
+    Creates a Plotly histogram of periodic returns.
+
+    Args:
+        returns (pd.Series): Returns data.
+        period (str): Period for resampling ('Monthly', 'Annual', or raw data).
+        title (str): Title of the chart.
+
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object.
+    """
     if period == 'Monthly':
         resampled_returns = returns.resample('M').sum()
         bins=20
@@ -135,14 +220,35 @@ def plot_returns_histogram(returns, period='Monthly', title="Returns Histogram")
     return fig
 
 def plot_rolling_std_dev(returns, window=252, title="Annualized Rolling Volatility"):
-    """Plotly chart of rolling standard deviation."""
+    """
+    Creates a Plotly chart of rolling standard deviation (volatility).
+
+    Args:
+        returns (pd.Series): Returns data.
+        window (int): Rolling window size in days.
+        title (str): Title of the chart.
+
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object.
+    """
     rolling_std = returns.rolling(window=window).std() * np.sqrt(window)
     fig = px.line(rolling_std, title=title, labels={'value': 'Rolling Volatility', 'index': 'Date'})
     fig.update_layout(hovermode="x unified")
     return fig
 
 def monte_carlo_simulation(returns_df, num_portfolios, risk_free_rate, trading_days=252):
-    """Performs the Monte Carlo simulation."""
+    """
+    Performs a Monte Carlo simulation to generate portfolio performance metrics.
+
+    Args:
+        returns_df (pd.DataFrame): DataFrame of asset returns.
+        num_portfolios (int): Number of portfolios to simulate.
+        risk_free_rate (float): Risk-free rate for Sharpe and Sortino Ratio calculations.
+        trading_days (int): Number of trading days in a year (default is 252).
+
+    Returns:
+        pd.DataFrame: DataFrame containing simulated portfolio metrics and weights.
+    """
     mean_returns = returns_df.mean()
     cov_matrix = returns_df.cov()
     num_assets = len(returns_df.columns)
@@ -177,7 +283,17 @@ def monte_carlo_simulation(returns_df, num_portfolios, risk_free_rate, trading_d
     return results_df
 
 def calculate_rolling_cagr(daily_returns, windows_years, trading_days=252):
-    """Calculates rolling annualized returns (CAGR) for different window periods."""
+    """
+    Calculates rolling annualized returns (CAGR) for different window periods.
+
+    Args:
+        daily_returns (pd.Series): Daily returns of the portfolio.
+        windows_years (list): List of window periods in years.
+        trading_days (int): Number of trading days in a year (default is 252).
+
+    Returns:
+        pd.DataFrame: DataFrame containing rolling CAGR for each window period.
+    """
     if daily_returns.empty:
         return pd.DataFrame()
 
@@ -199,7 +315,16 @@ def calculate_rolling_cagr(daily_returns, windows_years, trading_days=252):
 
 
 def plot_rolling_returns(rolling_returns_df, title="Rolling Annualized Returns (CAGR)"):
-    """Plots the rolling annualized returns using Plotly."""
+    """
+    Creates a Plotly chart of rolling annualized returns (CAGR).
+
+    Args:
+        rolling_returns_df (pd.DataFrame): DataFrame of rolling returns.
+        title (str): Title of the chart.
+
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object.
+    """
     if rolling_returns_df.empty:
         return go.Figure()
 
@@ -213,12 +338,12 @@ def plot_rolling_returns(rolling_returns_df, title="Rolling Annualized Returns (
 def search_etf_ticker(search_term):
     """
     Searches for ETFs matching the search term using yfinance.
-    
+
     Args:
-        search_term (str): Text to search for in ETF names or tickers
-        
+        search_term (str): Text to search for in ETF names or tickers.
+
     Returns:
-        list: List of matching ETF dictionaries with ticker, name and exchange info
+        list: List of matching ETF dictionaries with ticker, name, and exchange info.
     """
     matching_tickers = []
     
@@ -248,9 +373,9 @@ def search_etf_ticker(search_term):
 def display_ticker_search_interface():
     """
     Displays a Streamlit interface for searching ETFs by name or ticker.
-    
+
     Returns:
-        str: Selected ticker or None if no selection was made
+        str: Selected ticker or None if no selection was made.
     """
     st.subheader("Search for ETFs")
     search_term = st.text_input("Enter ETF name or ticker to search", "")

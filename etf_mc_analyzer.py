@@ -9,8 +9,8 @@ from scipy.stats import norm # For parametric VaR
 # from scipy.optimize import minimize # Optional for exact Efficient Frontier
 import traceback # For detailed error reporting
 from portfolio_analysis_utils import (
-    download_data, calculate_returns, fetch_valid_tickers,
-    search_etf_ticker, display_ticker_search_interface
+    download_data, calculate_returns, 
+    search_etf_ticker
 )
 from pages import monte_carlo_simulation_page, single_portfolio_analysis_page
 
