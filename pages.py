@@ -21,7 +21,7 @@ def monte_carlo_simulation_page(returns, risk_free_rate, tickers):
     with col1:
         num_portfolios = st.number_input(
             "Number of Portfolios to Simulate", 
-            min_value=1000, max_value=30000, value=3000, step=100
+            min_value=1000, max_value=30000, value=10000, step=100
         )
 
     if st.button("Run Monte Carlo Simulation"):

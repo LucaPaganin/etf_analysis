@@ -393,7 +393,7 @@ def plot_rolling_returns(rolling_returns_df, title="Rolling Annualized Returns (
     fig.add_hline(y=0, line_width=1, line_dash="dash", line_color="grey")
     return fig
 
-def search_etf_ticker(search_term):
+def old_search_etf_ticker(search_term):
     """
     Searches for ETFs matching the search term by scraping JustETF.
     
@@ -566,6 +566,41 @@ def search_etf_ticker(search_term):
     
     return matching_tickers
 
+
+def search_etf_ticker(search_term):
+    """
+    Searches for ETFs matching the search term using yfinance.
+    
+    Args:
+        search_term (str): Text to search for in ETF names or tickers
+        
+    Returns:
+        list: List of matching ETF dictionaries with ticker, name and exchange info
+    """
+    matching_tickers = []
+    
+    try:
+        # Use yf.search.Search to find matching securities
+        search_results = yf.search.Search(search_term, max_results=10)
+        
+        if len(search_results.quotes):            
+            for res in search_results.quotes:
+                ticker = res['symbol']
+                name = res.get('longname', res.get('shortname', 'Unknown Name'))
+                exchange = res.get('exchange', '')
+                
+                # Add to our results in the expected format
+                matching_tickers.append({
+                    'ticker': ticker,
+                    'name': name,
+                    'exchange': exchange
+                })
+    
+    except Exception as e:
+        st.warning(f"Error searching for ETFs: {str(e)[:100]}...")
+    
+    return matching_tickers
+
 def display_ticker_search_interface():
     """
     Displays a Streamlit interface for searching ETFs by name or ticker.
@@ -602,4 +637,4 @@ def display_ticker_search_interface():
                 
     return None
 
-# @st.cache_data(ttl=24*60*60)  # Cache for 24 hours
+

@@ -40,7 +40,7 @@ def configure_main_settings():
     
     if st.sidebar.button("Search ETFs"):
         if search_term:
-            with st.sidebar.spinner(f"Searching for '{search_term}'..."):
+            with st.spinner(f"Searching for '{search_term}'..."):
                 results = search_etf_ticker(search_term)
                 if results:
                     st.sidebar.success(f"Found {len(results)} ETFs")
@@ -63,23 +63,26 @@ def configure_main_settings():
             new_ticker = selected_option.split(" - ")[0]
             if new_ticker not in st.session_state.selected_tickers:
                 st.session_state.selected_tickers.append(new_ticker)
-                st.sidebar.success(f"Added {new_ticker} to your portfolio")
+                st.sidebar.success(f"Added {new_ticker} to your portfolio")        
     
-    # Fetch a base list of valid tickers to supplement the selected ones
-    base_tickers = fetch_valid_tickers()
-    
-    # Combine search results with base tickers to provide options
-    all_available_tickers = list(set(base_tickers + [t['ticker'] for t in st.session_state.search_results]))
-    
-    # Multiselect showing currently selected tickers
-    tickers = st.sidebar.multiselect(
-        "Selected ETF Tickers",
-        options=all_available_tickers,
-        default=st.session_state.selected_tickers
-    )
-    
-    # Update the session state based on the multiselect
-    st.session_state.selected_tickers = tickers
+    # Display current portfolio tickers with option to remove them
+    st.sidebar.subheader("Current Portfolio")
+    if st.session_state.selected_tickers:
+        for ticker in st.session_state.selected_tickers:
+            col1, col2 = st.sidebar.columns([3, 1])
+            with col1:
+                st.write(f"• {ticker}")
+            with col2:
+                if st.button("✖", key=f"remove_{ticker}"):
+                    st.session_state.selected_tickers.remove(ticker)
+                    st.rerun()
+    else:
+        st.sidebar.info("No tickers selected. Use the search above to add ETFs.")
+
+    # Option to clear the entire portfolio
+    if st.session_state.selected_tickers and st.sidebar.button("Clear Portfolio"):
+        st.session_state.selected_tickers = []
+        st.rerun()
 
     default_start_en = pd.to_datetime("2005-01-01")
     default_end_en = pd.to_datetime("today")
@@ -94,20 +97,16 @@ def configure_main_settings():
 
     page = st.sidebar.radio("Select Analysis", ["Monte Carlo Simulation", "Single Portfolio Historical Analysis"])
 
-    if not tickers:
-        st.warning("Please select at least one ticker in the sidebar.")
-        st.stop()
-
-    return tickers, start_date, end_date, risk_free_rate, page
+    return start_date, end_date, risk_free_rate, page
 
 
 if __name__ == "__main__":
     
     # --- Configure Main Settings and Global Inputs ---
-    tickers, start_date, end_date, risk_free_rate, page = configure_main_settings()
+    start_date, end_date, risk_free_rate, page = configure_main_settings()
 
     # --- Data Download (runs once if inputs don't change) ---
-    data = download_data(tickers, start_date, end_date)
+    data = download_data(st.session_state.selected_tickers, start_date, end_date)
 
     if data.empty:
         st.error("Cannot proceed without valid historical data.")
@@ -119,9 +118,9 @@ if __name__ == "__main__":
 
     # --- Page 1: Monte Carlo Simulation ---
     if page == "Monte Carlo Simulation":
-        monte_carlo_simulation_page(returns, risk_free_rate, tickers)
+        monte_carlo_simulation_page(returns, risk_free_rate, st.session_state.selected_tickers)
 
     # --- Page 2: Single Portfolio Historical Analysis ---
     elif page == "Single Portfolio Historical Analysis":
-        single_portfolio_analysis_page(returns_arithmetic, risk_free_rate, tickers)
+        single_portfolio_analysis_page(returns_arithmetic, risk_free_rate, st.session_state.selected_tickers)
 
